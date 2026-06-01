@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}{{ recipe.title }} — Family Recipes{% endblock %}
+
+{% block content %}
+<div class="recipe-view">
+
+  <a class="back" href="/">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8">
+      <path d="M8.5 2.5 4 7l4.5 4.5"/>
+    </svg>
+    All recipes
+  </a>
+
+  <div class="recipe-title-area">
+    <h1>{{ recipe.title }}</h1>
+    {% if recipe.favorite %}
+    <span class="fav-badge on" title="Favorite">★</span>
+    {% endif %}
+
+    <div class="recipe-meta">
+      {% if recipe.author %}
+      <div>
+        <span class="label">Author</span>
+        <span class="value plain">{{ recipe.author }}</span>
+      </div>
+      {% endif %}
+      {% if recipe.source %}
+      <div>
+        <span class="label">Source</span>
+        {% if recipe.source.url %}
+        <a class="value src-link" href="{{ recipe.source.url }}" target="_blank" rel="noopener noreferrer">{{ recipe.source.text }}</a>
+        {% else %}
+        <span class="value">{{ recipe.source.text }}</span>
+        {% endif %}
+      </div>
+      {% endif %}
+      {% if recipe.recommended_by %}
+      <div>
+        <span class="label">Recommended by</span>
+        <span class="value plain">{{ recipe.recommended_by }}</span>
+      </div>
+      {% endif %}
+      {% if recipe.added_by %}
+      <div>
+        <span class="label">Added by</span>
+        <span class="value plain">{{ recipe.added_by }}</span>
+      </div>
+      {% endif %}
+      {% if recipe.yield %}
+      <div>
+        <span class="label">Yield</span>
+        <span class="value num">{{ recipe.yield }}</span>
+      </div>
+      {% endif %}
+      {% if recipe.date_display %}
+      <div>
+        <span class="label">Date added</span>
+        <span class="value num">{{ recipe.date_display }}</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="recipe-body layout-sidebar">
+
+    <div class="col-ingredients">
+      <div class="section">
+        <h3 class="section-head">Ingredients</h3>
+        {% for group in recipe.ingredient_groups %}
+        <div class="ingredient-group">
+          {% if group.name %}<h4>{{ group.name }}</h4>{% endif %}
+          <ul class="ingredient-list">
+            {% for item in group.ingredients %}
+            <li>
+              <span class="qty">{{ item.qty }}</span>
+              <span class="name">{{ item.name }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="col-main">
+      {% if recipe.instruction_sections and recipe.instruction_sections[0].steps %}
+      <div class="section">
+        <h3 class="section-head">Instructions</h3>
+        {% for section in recipe.instruction_sections %}
+        <div class="instruction-section">
+          {% if section.name %}<h4>{{ section.name }}</h4>{% endif %}
+          <ol class="steps">
+            {% for step in section.steps %}
+            <li><p>{{ step }}</p></li>
+            {% endfor %}
+          </ol>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if recipe.notes_html or recipe.comments %}
+      <div class="section">
+        <h3 class="section-head">Notes</h3>
+        <div class="comments-body">{% if recipe.notes_html %}{{ recipe.notes_html | safe }}{% else %}{{ recipe.comments }}{% endif %}</div>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/recipe.js"></script>
+{% endblock %}

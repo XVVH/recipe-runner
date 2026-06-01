@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tag }} — Family Recipes{% endblock %}
+
+{% block content %}
+<div class="masthead">
+  <p class="kicker">Tag</p>
+  <h1>{{ tag }}</h1>
+  <p class="sub">{{ recipes|length }} {{ "recipe" if recipes|length == 1 else "recipes" }}</p>
+</div>
+
+<table class="recipe-table" style="border-top: 1px solid var(--rule-strong);">
+  <thead>
+    <tr>
+      <th>Recipe</th>
+      <th class="col-author">Author</th>
+      <th class="col-date">Date Added</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for recipe in recipes %}
+    <tr onclick="window.location.href='/{{ recipe.slug }}/';" style="cursor:pointer;">
+      <td><span class="cell-title">{{ recipe.title }}</span></td>
+      <td class="cell-author col-author">{{ recipe.author or '' }}</td>
+      <td class="cell-date col-date">{{ recipe.date_display }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<p style="margin-top: 2rem;"><a class="back" href="/">
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8">
+    <path d="M8.5 2.5 4 7l4.5 4.5"/>
+  </svg>
+  All recipes
+</a></p>
+{% endblock %}

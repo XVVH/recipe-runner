@@ -1,0 +1,17 @@
+python-frontmatter>=1.0.0
+PyYAML>=6.0.0
+jinja2>=3.0.0
+Markdown>=3.0.0
+watchdog>=3.0.0  # optional, for --watch mode
+pytest>=8.0.0   # tests/test_recipe_format.py
+recipemd-extract>=0.1.0  # scripts/ingest_url.py (ld+json fallback if missing)
+
+# Setup (one-time):
+#   python3 -m venv .venv
+#   .venv/bin/pip install -r site/requirements.txt
+#
+# Build:
+#   .venv/bin/python3 site/build.py
+#
+# Build + serve + watch:
+#   .venv/bin/python3 site/build.py --serve --watch --port 4001
