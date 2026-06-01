@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ingest_text.py -- Ingest recipe text into family-recipes (pasted RecipeMD, saved HTML, or file).
+ingest_text.py -- Ingest recipe text into a Recipe Runner collection (pasted RecipeMD, saved HTML, or file).
 
 Use when the user provides recipe text in chat, a bookmarklet HTML save, or a hand-written
 RecipeMD file. Same pipeline as ingest_url.py: normalize → canonicalize → strict validate.
@@ -15,7 +15,7 @@ Options:
     --title       Override title (otherwise from # heading or frontmatter title:)
     --source      Source URL or attribution string (frontmatter source:)
     --slug        Force output slug (default: slugify title, uniquify)
-    --added-by    added_by frontmatter (default: Josh)
+    --added-by    added_by frontmatter (default: $RECIPE_RUNNER_ADDED_BY or 'unknown')
     --dry-run     Parse/validate only; do not write
     --no-commit   Write file but skip git commit
 
@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -69,7 +70,7 @@ def main() -> None:
     parser.add_argument("--title", help="Override recipe title")
     parser.add_argument("--source", help="Source URL or attribution (e.g. cookbook, p. 42)")
     parser.add_argument("--slug", help="Override output slug")
-    parser.add_argument("--added-by", default="Josh", help="added_by frontmatter value")
+    parser.add_argument("--added-by", default=os.environ.get("RECIPE_RUNNER_ADDED_BY", "unknown"), help="added_by frontmatter value")
     parser.add_argument("--author", help="Author name (overrides JSON-LD when using --from-html)")
     parser.add_argument("--recommended-by", help="recommended_by frontmatter")
     parser.add_argument("--yield", dest="yield_override", help="Override yield")

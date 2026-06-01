@@ -33,7 +33,7 @@ Rules:
 ## Multi-photo (front + back of card)
 
 ```bash
-cd ~/dev/family-recipes
+cd ~/dev/recipe-runner
 # Save one JSON per photo, then merge:
 .venv/bin/python3 scripts/ingest_image.py \
   --json /tmp/recipe-front.json /tmp/recipe-back.json \

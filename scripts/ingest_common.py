@@ -1,5 +1,5 @@
 """
-Shared ingestion helpers for family-recipes.
+Shared ingestion helpers for Recipe Runner.
 
 Used by ingest_url.py, ingest_text.py, and ingest_image.py.
 Pipeline: RecipeMD-ish markdown → normalize() → canonicalize() → validate(strict) → write.
@@ -674,7 +674,7 @@ def process_recipemd(
     *,
     source_url: str = "",
     source_label: str = "",
-    added_by: str = "Josh",
+    added_by: str = "unknown",
     slug_override: str | None = None,
     title_override: str | None = None,
     author: str | None = None,

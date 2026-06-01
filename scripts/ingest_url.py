@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ingest_url.py -- Ingest recipe URLs into the family-recipes RecipeMD collection.
+ingest_url.py -- Ingest recipe URLs into a Recipe Runner collection.
 
 Fallback chain per URL:
   1. recipemd-extract <url>          -- direct extract

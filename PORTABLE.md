@@ -15,11 +15,10 @@ your own golden files.
 
 ## Hermes Agent skill
 
-If you use Hermes Agent, a `recipe-runner` skill is available in the hermes-agent
-community skill library. It wires the ingest pipeline into agent-driven workflows:
-natural-language recipe capture, vision photo-to-recipe, and automated deploy.
-
-Install it via the Hermes skill manager.
+If you use Hermes Agent, you can adapt the `recipe-collection` skill as a starting point
+for wiring the ingest pipeline into agent-driven workflows. Copy it to your own
+`~/.hermes/skills/` directory and update the paths and site URL to match your setup.
+A community-maintained recipe-runner skill is a planned contribution — not yet available.
 
 ## What is not included
 

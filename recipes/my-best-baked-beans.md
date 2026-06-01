@@ -47,6 +47,6 @@ Bake for 25 minutes, uncovered. Lower heat to 325 degrees F and cook at least an
 
 ---
 
-Josh's note: Great recipe, perfect for a cookout.
+Great recipe, perfect for a cookout.
 
 Author's note: Dry beans are even tastier than canned, but require advanced prep. After beans have been soaked, you want a total of 5-6 cups beans, using quantities of 50% pinto beans, 25% each of red and black beans. I used canned most of the time due to time constraints and they're fabulous.

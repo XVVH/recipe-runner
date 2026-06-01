@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ingest_image.py -- Ingest cookbook / photo recipes into family-recipes.
+ingest_image.py -- Ingest cookbook / photo recipes into a Recipe Runner collection.
 
 Vision extraction runs in Hermes (vision_analyze); this script converts structured JSON
 or pre-written RecipeMD into canonical recipes/*.md.
@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -79,7 +80,7 @@ def main() -> None:
     )
     parser.add_argument("--title", help="Override title")
     parser.add_argument("--slug", help="Override output slug")
-    parser.add_argument("--added-by", default="Josh", help="added_by frontmatter value")
+    parser.add_argument("--added-by", default=os.environ.get("RECIPE_RUNNER_ADDED_BY", "unknown"), help="added_by frontmatter value")
     parser.add_argument("--author", help="Author name (overrides vision JSON author field)")
     parser.add_argument("--recommended-by", help="recommended_by frontmatter")
     parser.add_argument("--yield", dest="yield_override", help="Override yield")
