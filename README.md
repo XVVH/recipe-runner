@@ -99,6 +99,26 @@ An automated Hermes Agent workflow that handles the full photo-to-recipe pipelin
 (camera roll -> extraction -> ingest -> build) is a tracked backlog item. Contributions
 welcome.
 
+## Hermes Agent Integration
+
+A Hermes skill template is included at `docs/SKILL.md`. Copy it to
+`~/.hermes/skills/productivity/recipe-runner/` along with the `docs/` reference files and
+update the paths to match your setup. This wires the ingest pipeline into agent-driven
+workflows: paste-to-recipe, vision photo ingest, and automated deploy via natural language.
+
+## Documentation
+
+| File | Contents |
+|------|----------|
+| `docs/recipe-format-contract.md` | Full YAML frontmatter spec and body shape |
+| `docs/ingest-checklist.md` | Pre-commit ingest checklist |
+| `docs/ingest-text-image.md` | Text paste and vision photo ingest guide |
+| `docs/ingestion-fallback-chain.md` | URL ingest tier chain and outcome codes |
+| `docs/anti-scraping-tiers.md` | Site-specific scraping tiers and workarounds |
+| `docs/recipemd-format.md` | RecipeMD upstream format reference |
+| `docs/ssg-design-tokens.md` | SSG theme design tokens |
+| `docs/SKILL.md` | Hermes Agent skill template |
+
 ## Contributing
 
 Fork, branch, PR. Keep your personal recipe data out of PRs; example recipes in
