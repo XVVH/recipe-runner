@@ -5,16 +5,16 @@ ingest_image.py -- Ingest cookbook / photo recipes into a Recipe Runner collecti
 Vision extraction runs in Hermes (vision_analyze); this script converts structured JSON
 or pre-written RecipeMD into canonical recipes/*.md.
 
-Workflow (Hermes agent):
-  1. vision_analyze(image, question=<see references/vision-extract-prompt.md>)
-  2. Save agent output as JSON (schema below) to /tmp/recipe-extract.json
-  3. python3 scripts/ingest_image.py --json /tmp/recipe-extract.json [--source "Cookbook, p. 42"]
+Workflow (Hermes agent — see references/vision-extract-prompt.md):
+  1. vision_analyze each photo with the prompt for its page role
+  2. Save one JSON per photo (include page_index / page_role when multi-page)
+  3. python3 scripts/ingest_image.py --json page1.json page2.json --source "Book, p. 42"
 
 Usage:
     python3 scripts/ingest_image.py --json /tmp/recipe-extract.json
-    python3 scripts/ingest_image.py --json front.json back.json --source "Handwritten card"
-    python3 scripts/ingest_image.py --json /tmp/recipe-extract.json --source "Joy of Cooking, p. 210"
-    python3 scripts/ingest_image.py --markdown /tmp/recipe.md   # already RecipeMD from vision
+    python3 scripts/ingest_image.py --json front.json back.json --recipe-type index-card
+    python3 scripts/ingest_image.py --json-dir /tmp/recipe-pages --recipe-type cookbook
+    python3 scripts/ingest_image.py --markdown /tmp/recipe.md
     python3 scripts/ingest_image.py --dry-run --json extract.json
 
 JSON schema (minimum):
@@ -27,9 +27,9 @@ JSON schema (minimum):
       "notes": ["Optional note bullets"]
     }
 
-    ingredients / instructions may be dicts for grouped sections:
-      "ingredients": {"Salad": ["2 cups kale"], "Dressing": ["1 egg yolk"]}
-      "instructions": {"Prep": ["Wash kale."], "Serve": ["Toss and serve."]}
+Multi-page metadata (optional, stripped before write):
+    "page_index": 1,
+    "page_role": "primary" | "continuation" | "index_front" | "index_back"
 
 Output: one JSON object on stdout. Exit 1 on error/invalid_format.
 """
@@ -44,7 +44,9 @@ from pathlib import Path
 
 from ingest_common import (
     add_ingest_cli_flags,
+    collect_json_paths,
     ingest_kwargs_from_args,
+    load_recipe_json_file,
     merge_recipe_json,
     process_recipemd,
     report_line,
@@ -70,9 +72,19 @@ def main() -> None:
         help="Structured recipe JSON from vision (pass multiple files to merge)",
     )
     group.add_argument(
+        "--json-dir",
+        metavar="DIR",
+        help="Directory of *.json extractions (sorted by filename; use page-01.json …)",
+    )
+    group.add_argument(
         "--markdown",
         metavar="FILE",
         help="RecipeMD markdown file (if vision returned markdown directly)",
+    )
+    parser.add_argument(
+        "--recipe-type",
+        choices=["cookbook", "index-card"],
+        help="Hint for multi-photo merge (cookbook pages vs index card front/back)",
     )
     parser.add_argument(
         "--source",
@@ -80,7 +92,11 @@ def main() -> None:
     )
     parser.add_argument("--title", help="Override title")
     parser.add_argument("--slug", help="Override output slug")
-    parser.add_argument("--added-by", default=os.environ.get("RECIPE_RUNNER_ADDED_BY", "unknown"), help="added_by frontmatter value")
+    parser.add_argument(
+        "--added-by",
+        default=os.environ.get("RECIPE_RUNNER_ADDED_BY", "unknown"),
+        help="added_by frontmatter value",
+    )
     parser.add_argument("--author", help="Author name (overrides vision JSON author field)")
     parser.add_argument("--recommended-by", help="recommended_by frontmatter")
     parser.add_argument("--yield", dest="yield_override", help="Override yield")
@@ -102,10 +118,13 @@ def main() -> None:
 
     schema_meta: dict = {}
     try:
-        if args.json:
-            paths = [Path(p) for p in args.json]
-            parts = [json.loads(p.read_text(encoding="utf-8")) for p in paths]
-            data = merge_recipe_json(parts) if len(parts) > 1 else parts[0]
+        if args.json or args.json_dir:
+            paths = collect_json_paths(
+                [Path(p) for p in args.json] if args.json else None,
+                Path(args.json_dir) if args.json_dir else None,
+            )
+            parts = [load_recipe_json_file(p) for p in paths]
+            data = merge_recipe_json(parts, recipe_type=args.recipe_type)
             if data.get("author"):
                 schema_meta["author"] = str(data["author"]).strip()
             if data.get("recommended_by"):

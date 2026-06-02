@@ -25,17 +25,35 @@ Agent workflow: user pastes RecipeMD or recipe text → agent saves to `/tmp/rec
 
 ## From cookbook photo / image
 
-Vision extraction is manual; the script writes the file.
+Vision extraction is agent-driven; the script merges pages and writes the file.
 
-1. Use the prompt in `references/vision-extract-prompt.md` with any LLM that supports image input.
-2. Save the returned JSON to `/tmp/recipe-extract.json`.
-3. Run:
+**Single page:** Prompt A in `references/vision-extract-prompt.md` → save JSON → ingest.
+
+**Multi-page cookbook:** Prompt A on page 1, Prompt B on pages 2+; save as
+`page-01.json`, `page-02.json`, … then:
 
 ```bash
 cd ~/dev/recipe-runner
-.venv/bin/python3 scripts/ingest_image.py --json /tmp/recipe-extract.json \
-  --source "Cookbook Title (p. 42)"
+.venv/bin/python3 scripts/ingest_image.py \
+  --json-dir /tmp/recipe-pages \
+  --recipe-type cookbook \
+  --source "Cookbook Title (p. 42–43)"
 ```
+
+**Index card (front + back):** Prompts C and D → two JSON files:
+
+```bash
+.venv/bin/python3 scripts/ingest_image.py \
+  --json /tmp/recipe-front.json /tmp/recipe-back.json \
+  --recipe-type index-card \
+  --source "Handwritten card"
+```
+
+Each JSON may include optional `page_index` and `page_role` (`primary`, `continuation`,
+`index_front`, `index_back`). Merge order follows `page_index`, then file order.
+Instructions append across pages (no dedupe); ingredients dedupe exact strings.
+
+Vision responses wrapped in markdown fences are accepted — `ingest_image.py` parses them.
 
 If the LLM returns RecipeMD markdown instead of JSON:
 
@@ -43,14 +61,15 @@ If the LLM returns RecipeMD markdown instead of JSON:
 .venv/bin/python3 scripts/ingest_image.py --markdown /tmp/recipe.md --source "..."
 ```
 
-Multi-photo (e.g. front + back of a recipe card): pass multiple `--json` files; the script merges them before canonicalize.
-
 Status values: `success`, `exists`, `error`, `invalid_format` (same as `ingest_url.py`).
 
-## Hermes Agent (optional)
+## Hermes Agent workflow
 
-If you use Hermes Agent, the `vision_analyze` tool can drive step 1 of the image path directly. See `docs/SKILL.md` in this repo for a Hermes skill template you can adapt.
+See `references/vision-extract-prompt.md` § "Hermes agent workflow (multi-photo)".
+Use `vision_analyze` once per photo with the matching prompt, save JSON files, then
+`ingest_image.py --json-dir` or `--json file1 file2 …`.
 
 ## Automated vision workflow (backlog)
 
-A fully automated camera-roll → ingest pipeline (no manual JSON step) is a tracked backlog item. Contributions welcome.
+Direct `--images photo.jpg` without a vision step is not implemented (vision runs in
+Hermes). The multi-photo merge + page-role prompts above are the supported path.

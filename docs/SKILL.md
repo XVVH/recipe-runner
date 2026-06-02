@@ -83,15 +83,22 @@ See `references/ingest-text-image.md`.
 
 ### From photo (vision path)
 
-1. Use `vision_analyze` with prompt from `references/vision-extract-prompt.md`
-2. Save returned JSON to `/tmp/recipe-extract.json`
+Multi-page cookbook and index-card flows: see `references/vision-extract-prompt.md`.
+
+1. `vision_analyze` each photo with Prompt A/B (cookbook) or C/D (index card)
+2. Save JSON files (`page-01.json`, …) — markdown fences OK
 3. Run:
+
 ```bash
-.venv/bin/python3 scripts/ingest_image.py --json /tmp/recipe-extract.json \
-  --added-by "You" --source "Cookbook Title (p. 42)"
+cd ~/dev/recipe-runner
+.venv/bin/python3 scripts/ingest_image.py \
+  --json-dir /tmp/recipe-pages \
+  --recipe-type cookbook \
+  --added-by "You" --source "Cookbook Title (p. 42–43)"
 ```
 
-Multi-photo: pass multiple `--json` files; the script merges before canonicalize.
+Single image: `--json /tmp/recipe-extract.json`. Index card: `--json front.json back.json --recipe-type index-card`.
+
 See `references/ingest-text-image.md`.
 
 ## Build and deploy

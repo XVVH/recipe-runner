@@ -21,7 +21,7 @@ H1_RE = re.compile(r"^#\s+.+$", re.MULTILINE)
 HTML_RE = re.compile(r"<[a-zA-Z/][^>]*>")
 SOURCE_TRAIL_RE = re.compile(r"^\*Source:\s*.+\*\s*$", re.MULTILINE)
 
-REQUIRED_FM_STRICT = ("title", "date")
+REQUIRED_FM_STRICT = ("title", "date", "added_by")
 REQUIRED_FM_BUILD = ("title", "date")
 
 FM_KEY_ORDER = (
@@ -349,28 +349,215 @@ _STEP_ONLY_FOOD_RE = re.compile(
 
 
 def _food_text_cleanup(food: str) -> str:
-    """Strip parentheticals for ingredient-name matching."""
+    """Strip parentheticals and trailing prep clauses for ingredient-name matching."""
     s = re.sub(r"\([^)]*\)", "", food)
     s = re.sub(r"\s+", " ", s).strip().strip(",").strip()
+    if "," in s:
+        head, tail = s.split(",", 1)
+        if _looks_like_prep_clause(tail.strip()):
+            s = head.strip()
+    s = re.sub(
+        r",?\s*and (?:drained|rinsed|patted dry)\.?$", "", s, flags=re.IGNORECASE
+    ).strip()
     return s
+
+
+_PREP_CLAUSE_START_RE = re.compile(
+    r"^(?:"
+    r"melted|softened|cooled|chilled|warmed|at room|for rolling|for garnish|"
+    r"minced|diced|chopped|sliced|crushed|grated|peeled|seeded|trimmed|"
+    r"cut into|optional|plus more|or to taste|or more to taste|to taste|as needed|divided|"
+    r"and drained|and rinsed|and chopped|and minced"
+    r")\b",
+    re.IGNORECASE,
+)
+
+
+def _looks_like_prep_clause(tail: str) -> bool:
+    return bool(_PREP_CLAUSE_START_RE.match(tail))
+
+
+# Leading words stripped to reach the noun steps usually name ("ground ginger" -> ginger).
+_LEADING_MODIFIERS = frozenset(
+    {
+        "all-purpose",
+        "all",
+        "purpose",
+        "apple",
+        "black",
+        "brown",
+        "cider",
+        "coarsely",
+        "cold",
+        "dark",
+        "diamond",
+        "crystal",
+        "extra",
+        "extra-virgin",
+        "finely",
+        "fresh",
+        "frozen",
+        "ground",
+        "hot",
+        "kosher",
+        "large",
+        "light",
+        "medium",
+        "packed",
+        "red",
+        "ripe",
+        "room",
+        "small",
+        "unsalted",
+        "salted",
+        "unsulfured",
+        "virgin",
+        "warm",
+        "white",
+        "whole",
+        "young",
+    }
+)
+
+# Never highlight these alone — usually fragments of prep text or generic modifiers.
+_VARIANT_BLOCKLIST = frozenset(
+    {
+        "all",
+        "cooled",
+        "crystal",
+        "diamond",
+        "finely",
+        "for",
+        "ground",
+        "kosher",
+        "large",
+        "melted",
+        "medium",
+        "optional",
+        "overnight",
+        "paste",
+        "packed",
+        "purpose",
+        "rolling",
+        "room",
+        "temperature",
+        "unsalted",
+        "unsulfured",
+    }
+)
+
+# "vanilla extract" -> also match "vanilla" in steps.
+_EXTRACT_SUFFIX_WORDS = frozenset({"extract", "zest"})
+
+# Second word in "garlic cloves, minced" — steps often say "the garlic" only.
+_COUNTABLE_UNIT_WORDS = frozenset(
+    {
+        "clove",
+        "cloves",
+        "bulb",
+        "bulbs",
+        "slice",
+        "slices",
+        "piece",
+        "pieces",
+        "leaf",
+        "leaves",
+        "sprig",
+        "sprigs",
+        "stalk",
+        "stalks",
+        "head",
+        "heads",
+        "strip",
+        "strips",
+        "pod",
+        "pods",
+        "ear",
+        "ears",
+        "rib",
+        "ribs",
+        "bunch",
+        "bunches",
+        "stick",
+        "sticks",
+    }
+)
+
+
+def _add_variant(variants: list[str], seen: set[str], phrase: str) -> None:
+    phrase = re.sub(r"\s+", " ", phrase).strip().strip(",").strip()
+    if not phrase:
+        return
+    key = phrase.lower()
+    if key in seen or len(key) < 3 or key in _VARIANT_BLOCKLIST:
+        return
+    seen.add(key)
+    variants.append(phrase)
+
+
+def _strip_leading_modifiers(phrase: str) -> str:
+    words = phrase.split()
+    while len(words) > 1:
+        head = words[0].lower().rstrip(",")
+        if head in _LEADING_MODIFIERS:
+            words = words[1:]
+            continue
+        if head.endswith("-") and words[0][:-1].lower() in _LEADING_MODIFIERS:
+            words = words[1:]
+            continue
+        break
+    return " ".join(words)
 
 
 def _ingredient_variants(food: str) -> list[str]:
     """Search phrases derived from an ingredient line (longest match first)."""
     variants: list[str] = []
+    seen: set[str] = set()
     cleaned = _food_text_cleanup(food)
     if not cleaned:
         return variants
-    variants.append(cleaned)
-    words = cleaned.split()
-    if len(words) >= 2:
-        tail2 = " ".join(words[-2:])
-        if tail2.lower() != cleaned.lower():
-            variants.append(tail2)
-    if len(words) >= 3:
-        tail1 = words[-1]
-        if len(tail1) >= 4:
-            variants.append(tail1)
+
+    def _maybe_head_noun(phrase: str) -> None:
+        parts = phrase.split()
+        if len(parts) >= 2 and parts[1].lower().rstrip(",") in _COUNTABLE_UNIT_WORDS:
+            head = parts[0]
+            if head.lower() not in _LEADING_MODIFIERS:
+                _add_variant(variants, seen, head)
+
+    def _expand_phrase(phrase: str) -> None:
+        _add_variant(variants, seen, phrase)
+        _maybe_head_noun(phrase)
+
+        stripped = _strip_leading_modifiers(phrase)
+        if stripped.lower() != phrase.lower():
+            _add_variant(variants, seen, stripped)
+            _maybe_head_noun(stripped)
+
+        if "-" in phrase:
+            for part in phrase.split("-"):
+                part = part.strip()
+                if part and part.lower() != phrase.lower():
+                    _add_variant(variants, seen, part)
+                    _add_variant(variants, seen, _strip_leading_modifiers(part))
+
+        words = phrase.split()
+        if len(words) >= 2:
+            tail2 = " ".join(words[-2:])
+            if tail2.lower() != phrase.lower():
+                _add_variant(variants, seen, tail2)
+        if words:
+            tail1 = words[-1].rstrip(",")
+            if len(words) >= 2 and tail1.lower() != phrase.lower():
+                _add_variant(variants, seen, tail1)
+        if len(words) >= 2 and words[-1].lower().rstrip(",") in _EXTRACT_SUFFIX_WORDS:
+            _add_variant(variants, seen, " ".join(words[:-1]))
+
+    _expand_phrase(cleaned)
+    if "," in food:
+        before_comma = _food_text_cleanup(food.split(",", 1)[0])
+        if before_comma.lower() != cleaned.lower():
+            _expand_phrase(before_comma)
+
     return variants
 
 
@@ -447,6 +634,9 @@ def apply_ingredient_highlights(content: str) -> str:
     _desc, ing_block, instr_block, notes_block = split_body_sections(body)
     if not ing_block or not instr_block:
         return content
+
+    # Strip prior highlights so re-runs are idempotent.
+    instr_block = HIGHLIGHT_INNER_RE.sub(r"\1", instr_block)
 
     names = ingredient_names_from_block(ing_block)
     if not names:
@@ -526,7 +716,7 @@ def canonicalize(
     md: str,
     *,
     source_url: str = "",
-    added_by: str = "unknown",
+    added_by: str = "Josh",
     ingest_date: str | None = None,
     author: str | None = None,
     recommended_by: str | None = None,
@@ -535,7 +725,7 @@ def canonicalize(
     schema_metadata: dict | None = None,
 ) -> str:
     """
-    Convert normalized RecipeMD markdown to canonical Recipe Runner format.
+    Convert normalized RecipeMD markdown to canonical family-recipes format.
 
     Expects md after normalize() (ingredient markup, optional *Source: url* trailer).
     Uses migrate_to_frontmatter for metadata extraction, then rewrites body to
@@ -730,7 +920,7 @@ def validate_recipe(
                 )
                 break
 
-    if strict and fm.get("added_by") is not None and not fm.get("added_by"):
+    if strict and not fm.get("added_by"):
         add("frontmatter", "missing added_by (required for ingested recipes)")
 
     tags = fm.get("tags")

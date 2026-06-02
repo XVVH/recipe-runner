@@ -527,15 +527,80 @@ def fetch_recipe_schema(url: str) -> tuple[dict | None, str]:
     return None, "no schema.org Recipe in ld+json"
 
 
-def merge_recipe_json(parts: list[dict[str, Any]]) -> dict[str, Any]:
+def parse_vision_json(text: str) -> dict[str, Any]:
     """
-    Merge multiple vision-extraction JSON blobs (e.g. front/back of a recipe card).
-    Later parts append ingredients, instructions, and notes.
+    Parse JSON from a vision model response, tolerating markdown fences and preamble.
+    """
+    raw = text.strip()
+    if not raw:
+        raise ValueError("empty vision JSON")
+    fence = re.search(r"```(?:json)?\s*([\s\S]*?)```", raw)
+    if fence:
+        raw = fence.group(1).strip()
+    else:
+        start = raw.find("{")
+        end = raw.rfind("}")
+        if start >= 0 and end > start:
+            raw = raw[start : end + 1]
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"invalid vision JSON: {e}") from e
+    if not isinstance(data, dict):
+        raise ValueError("vision JSON must be an object")
+    return data
+
+
+def _extraction_page_index(part: dict[str, Any], fallback: int) -> int:
+    idx = part.get("page_index")
+    if idx is None:
+        return fallback
+    try:
+        return int(idx)
+    except (TypeError, ValueError):
+        return fallback
+
+
+def _extraction_page_role(part: dict[str, Any]) -> str:
+    role = str(part.get("page_role") or "").strip().lower()
+    if role in {"primary", "continuation", "index_front", "index_back"}:
+        return role
+    return ""
+
+
+def sort_extraction_parts(parts: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Order extractions by page_index when present; preserve input order as tiebreaker."""
+    return sorted(
+        enumerate(parts),
+        key=lambda pair: (_extraction_page_index(pair[1], pair[0]), pair[0]),
+    )
+
+
+def strip_extraction_metadata(data: dict[str, Any]) -> dict[str, Any]:
+    """Remove vision workflow keys before RecipeMD conversion."""
+    return {k: v for k, v in data.items() if k not in {"page_index", "page_role"}}
+
+
+def merge_recipe_json(
+    parts: list[dict[str, Any]],
+    *,
+    recipe_type: str | None = None,
+) -> dict[str, Any]:
+    """
+    Merge multiple vision-extraction JSON blobs (cookbook pages, index card front/back).
+
+    Optional per-part metadata (stripped before write):
+      page_index: int — merge order (default: argument order)
+      page_role: primary | continuation | index_front | index_back
+
+    Ingredients dedupe exact strings; instructions append in page order without dedupe
+    so repeated steps (e.g. "stir") on continuation pages are preserved.
     """
     if not parts:
         raise ValueError("no recipe JSON to merge")
-    if len(parts) == 1:
-        return parts[0]
+    ordered = [p for _, p in sort_extraction_parts(parts)]
+    if len(ordered) == 1:
+        return strip_extraction_metadata(ordered[0])
 
     def _as_list(val) -> list:
         if val is None:
@@ -544,14 +609,18 @@ def merge_recipe_json(parts: list[dict[str, Any]]) -> dict[str, Any]:
             return list(val)
         return [val]
 
-    def _merge_lists(a, b) -> list:
+    def _dedupe_append_lists(a, b) -> list:
         out = list(_as_list(a))
         for item in _as_list(b):
             if item not in out:
                 out.append(item)
         return out
 
-    def _merge_dict_of_lists(a, b) -> dict:
+    def _append_lists(a, b) -> list:
+        return list(_as_list(a)) + list(_as_list(b))
+
+    def _merge_dict_of_lists(a, b, *, dedupe: bool) -> dict:
+        merge_fn = _dedupe_append_lists if dedupe else _append_lists
         out: dict = {}
         if isinstance(a, dict):
             out.update({k: list(v or []) for k, v in a.items()})
@@ -559,48 +628,101 @@ def merge_recipe_json(parts: list[dict[str, Any]]) -> dict[str, Any]:
             out["Ingredients"] = list(a)
         if isinstance(b, dict):
             for k, v in b.items():
-                out.setdefault(k, [])
-                for item in v or []:
-                    if item not in out[k]:
-                        out[k].append(item)
+                out[k] = merge_fn(out.get(k, []), v or [])
         elif isinstance(b, list):
-            out.setdefault("Ingredients", [])
-            for item in b:
-                if item not in out["Ingredients"]:
-                    out["Ingredients"].append(item)
+            out["Ingredients"] = merge_fn(out.get("Ingredients", []), b)
         return out
 
-    merged: dict[str, Any] = dict(parts[0])
-    for other in parts[1:]:
-        if not merged.get("title") and other.get("title"):
-            merged["title"] = other["title"]
+    def _title_from_part(part: dict[str, Any]) -> str:
+        return str(part.get("title") or part.get("name") or "").strip()
+
+    def _is_continuation(part: dict[str, Any]) -> bool:
+        role = _extraction_page_role(part)
+        if role in {"continuation", "index_back"}:
+            return True
+        if recipe_type == "cookbook" and role == "":
+            idx = part.get("page_index")
+            if idx is not None:
+                try:
+                    return int(idx) > 1
+                except (TypeError, ValueError):
+                    pass
+        return False
+
+    merged: dict[str, Any] = {}
+    for i, part in enumerate(ordered):
+        role = _extraction_page_role(part)
+        title = _title_from_part(part)
+        if title and not _is_continuation(part):
+            if not merged.get("title"):
+                merged["title"] = title
+        elif title and not merged.get("title") and role in {"primary", "index_front", ""}:
+            merged["title"] = title
+
         for key in ("yield", "author", "description", "recommended_by", "servings"):
-            if not merged.get(key) and other.get(key):
-                merged[key] = other[key]
+            if not merged.get(key) and part.get(key):
+                merged[key] = part[key]
+
         merged_tags = _as_list(merged.get("tags"))
-        for tag in _as_list(other.get("tags")):
+        for tag in _as_list(part.get("tags")):
             if tag not in merged_tags:
                 merged_tags.append(tag)
         if merged_tags:
             merged["tags"] = merged_tags
 
         for key in ("ingredients", "recipeIngredient"):
-            a, b = merged.get(key), other.get(key)
+            a, b = merged.get(key), part.get(key)
             if isinstance(a, dict) or isinstance(b, dict):
-                merged[key] = _merge_dict_of_lists(a, b)
+                merged[key] = _merge_dict_of_lists(a, b, dedupe=True)
             else:
-                merged[key] = _merge_lists(a, b)
+                merged[key] = _dedupe_append_lists(a, b)
 
         for key in ("instructions", "recipeInstructions"):
-            a, b = merged.get(key), other.get(key)
+            a, b = merged.get(key), part.get(key)
             if isinstance(a, dict) or isinstance(b, dict):
-                merged[key] = _merge_dict_of_lists(a, b)
+                merged[key] = _merge_dict_of_lists(a, b, dedupe=False)
             else:
-                merged[key] = _merge_lists(a, b)
+                merged[key] = _append_lists(a, b)
 
-        merged["notes"] = _merge_lists(merged.get("notes"), other.get("notes"))
+        merged["notes"] = _dedupe_append_lists(merged.get("notes"), part.get("notes"))
 
-    return merged
+    if not merged.get("title"):
+        for part in ordered:
+            title = _title_from_part(part)
+            if title:
+                merged["title"] = title
+                break
+
+    return strip_extraction_metadata(merged)
+
+
+def load_recipe_json_file(path: Path) -> dict[str, Any]:
+    """Load structured recipe JSON from disk, parsing vision responses if needed."""
+    text = path.read_text(encoding="utf-8")
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        data = parse_vision_json(text)
+    if not isinstance(data, dict):
+        raise ValueError(f"{path}: expected JSON object")
+    return data
+
+
+def collect_json_paths(
+    json_files: list[Path] | None = None,
+    json_dir: Path | None = None,
+) -> list[Path]:
+    """Resolve ordered JSON paths from explicit files or a directory."""
+    if json_files:
+        return list(json_files)
+    if json_dir is None:
+        raise ValueError("no JSON inputs")
+    if not json_dir.is_dir():
+        raise ValueError(f"not a directory: {json_dir}")
+    paths = sorted(json_dir.glob("*.json"))
+    if not paths:
+        raise ValueError(f"no *.json files in {json_dir}")
+    return paths
 
 
 AUTHOR_FIRST_LINE_RE = re.compile(

@@ -17,9 +17,12 @@ from recipe_format import (  # noqa: E402
 )
 from ingest_common import (  # noqa: E402
     apply_common_typos,
+    load_recipe_json_file,
     merge_recipe_json,
     parse_title_author_from_plaintext,
+    parse_vision_json,
     process_recipemd,
+    strip_extraction_metadata,
     structured_to_recipemd,
 )
 
@@ -103,6 +106,58 @@ def test_merge_recipe_json_combines_parts():
     assert "ricotta" in merged["ingredients"]
     assert "Bake" in merged["instructions"]
     assert "Let rest" in merged["notes"][0]
+    assert "page_role" not in merged
+
+
+def test_merge_recipe_json_continuation_appends_duplicate_steps():
+    page1 = {
+        "page_index": 1,
+        "page_role": "primary",
+        "title": "Risotto",
+        "ingredients": ["2 cups arborio rice"],
+        "instructions": ["Stir constantly."],
+    }
+    page2 = {
+        "page_index": 2,
+        "page_role": "continuation",
+        "title": "Other Recipe Header",
+        "ingredients": ["4 cups broth"],
+        "instructions": ["Stir constantly.", "Add broth ladle by ladle."],
+    }
+    merged = merge_recipe_json([page1, page2], recipe_type="cookbook")
+    assert merged["title"] == "Risotto"
+    assert merged["instructions"] == [
+        "Stir constantly.",
+        "Stir constantly.",
+        "Add broth ladle by ladle.",
+    ]
+
+
+def test_merge_recipe_json_sorts_by_page_index():
+    second = {"page_index": 2, "page_role": "continuation", "instructions": ["Bake."]}
+    first = {
+        "page_index": 1,
+        "page_role": "primary",
+        "title": "Cake",
+        "ingredients": ["flour"],
+        "instructions": ["Mix."],
+    }
+    merged = merge_recipe_json([second, first], recipe_type="cookbook")
+    assert merged["instructions"] == ["Mix.", "Bake."]
+
+
+def test_parse_vision_json_strips_fences():
+    raw = 'Here is the recipe:\n```json\n{"title": "Soup", "ingredients": ["water"]}\n```'
+    data = parse_vision_json(raw)
+    assert data["title"] == "Soup"
+    assert strip_extraction_metadata({**data, "page_index": 1}) == data
+
+
+def test_load_recipe_json_file_accepts_fenced_file(tmp_path):
+    path = tmp_path / "page-01.json"
+    path.write_text('```json\n{"title": "Tea", "ingredients": ["water"]}\n```\n')
+    data = load_recipe_json_file(path)
+    assert data["title"] == "Tea"
 
 
 def test_parse_title_author_first_line():
