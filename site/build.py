@@ -251,6 +251,9 @@ def build():
     built = _date.today().isoformat()
 
     recipes = load_recipes()
+    from recipe_links import apply_recipe_links
+
+    apply_recipe_links(recipes, slugify)
     tags    = all_tags(recipes)
 
     # Index

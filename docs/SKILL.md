@@ -18,6 +18,7 @@ linked_files:
     - recipe-format-contract.md
     - ingest-checklist.md
     - ingest-text-image.md
+    - pdf-ingest.md
     - ingestion-fallback-chain.md
     - anti-scraping-tiers.md
     - recipemd-format.md
@@ -100,6 +101,14 @@ cd ~/dev/recipe-runner
 Single image: `--json /tmp/recipe-extract.json`. Index card: `--json front.json back.json --recipe-type index-card`.
 
 See `references/ingest-text-image.md`.
+
+### From PDF (text layer)
+
+```bash
+.venv/bin/python3 scripts/ingest_pdf.py /path/to/recipe.pdf --out /tmp/extract.txt
+```
+
+Structure RecipeMD → `ingest_text.py`. See `references/pdf-ingest.md`.
 
 ## Build and deploy
 

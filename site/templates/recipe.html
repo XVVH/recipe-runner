@@ -87,16 +87,16 @@
       {% if recipe.instruction_sections and recipe.instruction_sections[0].steps %}
       <div class="section">
         <h3 class="section-head">Instructions</h3>
-        {% for section in recipe.instruction_sections %}
-        <div class="instruction-section">
-          {% if section.name %}<h4>{{ section.name }}</h4>{% endif %}
-          <ol class="steps">
+        <ol class="steps steps-recipe">
+          {% for section in recipe.instruction_sections %}
+            {% if section.name %}
+            <li class="step-phase"><p class="step-phase-title">{{ section.name }}</p></li>
+            {% endif %}
             {% for step in section.steps %}
-            <li><p>{{ step }}</p></li>
+            <li><p>{{ step | safe }}</p></li>
             {% endfor %}
-          </ol>
-        </div>
-        {% endfor %}
+          {% endfor %}
+        </ol>
       </div>
       {% endif %}
 

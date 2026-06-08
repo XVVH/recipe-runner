@@ -48,6 +48,14 @@ Extract structured JSON from a recipe photo using the prompt in
 Multi-photo recipes (e.g. card front + back) can be merged before ingest.
 See `references/vision-extract-prompt.md` for the extraction prompt and JSON shape.
 
+### From a PDF (text layer)
+
+```bash
+.venv/bin/python scripts/ingest_pdf.py /path/to/recipe.pdf --out /tmp/extract.txt
+```
+
+Structure as RecipeMD, then `ingest_text.py`. See `docs/pdf-ingest.md`.
+
 ## Recipe Format
 
 Recipes are YAML frontmatter + an ingredients-first body with three `---` sections:

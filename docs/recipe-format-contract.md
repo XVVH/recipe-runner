@@ -47,8 +47,11 @@ Step text. Use [[butter]] for client-side highlights (literal match in step text
 Another step.
 ```
 
+- Optional `## Phase name` headings group steps; the SSG renders **one continuous numbered list** (numbers do not restart per phase).
+- **One non-empty line = one numbered step** (single newlines count; blank lines are ignored).
 - Flat steps (no `##`) are valid for ingest; phases are optional polish.
-- `[[highlights]]` are optional, manual or post-ingest; `recipe.js` highlights at render time.
+- `[[Recipe Title]]` in steps or notes can link to other recipes when the title matches (build-time via `recipe_links.py`).
+- `[[highlights]]` for ingredients are optional; `recipe.js` fills gaps client-side when brackets remain.
 
 Section 3 — **notes** (optional, after second `\n---\n`):
 

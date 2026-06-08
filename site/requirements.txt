@@ -5,6 +5,7 @@ Markdown>=3.0.0
 watchdog>=3.0.0  # optional, for --watch mode
 pytest>=8.0.0   # tests/test_recipe_format.py
 recipemd-extract>=0.1.0  # scripts/ingest_url.py (ld+json fallback if missing)
+pymupdf>=1.24.0  # scripts/ingest_pdf.py (PDF text extraction)
 
 # Setup (one-time):
 #   python3 -m venv .venv

@@ -716,7 +716,7 @@ def canonicalize(
     md: str,
     *,
     source_url: str = "",
-    added_by: str = "Josh",
+    added_by: str = "unknown",
     ingest_date: str | None = None,
     author: str | None = None,
     recommended_by: str | None = None,
@@ -725,7 +725,7 @@ def canonicalize(
     schema_metadata: dict | None = None,
 ) -> str:
     """
-    Convert normalized RecipeMD markdown to canonical family-recipes format.
+    Convert normalized RecipeMD markdown to canonical Recipe Runner format.
 
     Expects md after normalize() (ingredient markup, optional *Source: url* trailer).
     Uses migrate_to_frontmatter for metadata extraction, then rewrites body to
