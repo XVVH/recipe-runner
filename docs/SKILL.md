@@ -1,7 +1,7 @@
 ---
 name: recipe-runner
-description: Manage a Recipe Runner collection. Canonical YAML-frontmatter + ingredients-first body, recipe_format.py validation, ingest pipeline (URL/text/image), Python SSG, static deploy.
-version: 1.0.0
+description: Manage a Recipe Runner collection. Canonical YAML-frontmatter + ingredients-first body, recipe_format.py validation, ingest pipeline (URL/text/image/PDF), Python SSG, static deploy. Generic — copy from the recipe-runner repo docs/.
+version: 1.1.0
 triggers:
   - recipe collection
   - recipe runner
@@ -13,28 +13,37 @@ triggers:
   - import from url
   - add a recipe
   - recipe format
+  - handwritten recipe card
 linked_files:
   references:
+    - REPLICATION.md
     - recipe-format-contract.md
     - ingest-checklist.md
     - ingest-text-image.md
+    - recipe-card-handwriting.md
     - pdf-ingest.md
+    - ingredient-highlights.md
+    - ssg-recipe-links.md
+    - paste-ingest-fallback.md
+    - cookbook-photo-ingest-pitfalls.md
+    - batch-url-ingest-pitfalls.md
     - ingestion-fallback-chain.md
     - anti-scraping-tiers.md
     - recipemd-format.md
     - ssg-design-tokens.md
+    - vision-extract-prompt.md
 ---
 
 # Recipe Runner
 
 ## Setup
 
-> **Before using this skill:** copy it to `~/.hermes/skills/productivity/recipe-runner/`
-> and update the paths and URLs below to match your fork.
+> **Install:** see `references/REPLICATION.md` in this skill folder. Summary: clone the repo, venv, copy this `SKILL.md` + all `references/*.md` + repo `references/vision-extract-prompt.md`.
 
-Repo: `~/dev/recipe-runner` (update to your local path)
+Repo: `~/dev/recipe-runner` (your clone path)
 Python SSG: `.venv/bin/python3 site/build.py` → `_site/`
-Production URL: set `RECIPE_RUNNER_SITE_URL` env var
+Production URL: `RECIPE_RUNNER_SITE_URL` env var
+Default ingest attribution: `RECIPE_RUNNER_ADDED_BY` or `--added-by "You"`
 
 ## Format contract
 
@@ -84,7 +93,7 @@ See `references/ingest-text-image.md`.
 
 ### From photo (vision path)
 
-Multi-page cookbook and index-card flows: see `references/vision-extract-prompt.md`.
+Handwritten cards: `references/recipe-card-handwriting.md`. Multi-page cookbook and index-card flows: `references/vision-extract-prompt.md`. Pitfalls: `references/cookbook-photo-ingest-pitfalls.md`.
 
 1. `vision_analyze` each photo with Prompt A/B (cookbook) or C/D (index card)
 2. Save JSON files (`page-01.json`, …) — markdown fences OK
@@ -135,6 +144,8 @@ Always build locally first. Set `RECIPE_RUNNER_SITE_URL` before deploy for corre
 
 Strict mode (`validate_recipe(strict=True)`) runs on every ingest write. Invalid files are never written.
 
+**Highlights:** `scripts/highlight_all_recipes.py` or `references/ingredient-highlights.md`. **Cross-links:** `references/ssg-recipe-links.md`. **Paste failures:** `references/paste-ingest-fallback.md`. **Batch URLs:** `references/batch-url-ingest-pitfalls.md`.
+
 ## Repo structure
 
 ```
@@ -142,15 +153,14 @@ recipe-runner/
   recipes/                 # *.md + _template.md (build skips recipes/_*.md)
   docs/                    # format contract, ingest guides, operational references
   site/                    # build.py, recipe_format.py, templates/, static/
-  scripts/                 # ingest_url.py, ingest_text.py, ingest_image.py, ingest_common.py
-  references/              # vision-extract-prompt.md
+  scripts/                 # ingest_url.py, ingest_text.py, ingest_image.py, ingest_common.py, highlight_all_recipes.py
+  references/              # vision-extract-prompt.md (also copy into skill references/)
   tests/
   .venv/                   # project venv — always use for build/ingest
 ```
 
 ## Adapting this skill
 
-- Update repo path (`~/dev/recipe-runner`) to wherever you cloned the repo.
-- Set `RECIPE_RUNNER_SITE_URL` to your production URL.
-- Set `RECIPE_RUNNER_ADDED_BY` (or pass `--added-by` on every ingest).
-- Copy this file and the `references/` docs to your `~/.hermes/skills/productivity/recipe-runner/`.
+1. Follow `references/REPLICATION.md` (clone repo, env vars, optional Hermes install).
+2. Update repo path and `RECIPE_RUNNER_SITE_URL` in this file if needed.
+3. Keep `references/` in sync with the repo's `docs/*.md` when the engine updates.

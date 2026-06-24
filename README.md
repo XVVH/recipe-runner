@@ -5,6 +5,8 @@ pipeline. Store recipes as plain text files, build a fast static site, and impor
 from URLs, pasted text, or vision-extracted JSON. No database, no framework, no
 Hermes Agent required to run it.
 
+**Give someone a full stack:** start with [`docs/REPLICATION.md`](docs/REPLICATION.md) (clone, venv, optional Hermes skill, behavior parity table).
+
 ## Quick Start
 
 ```
@@ -109,19 +111,25 @@ welcome.
 
 ## Hermes Agent Integration
 
-A Hermes skill template is included at `docs/SKILL.md`. Copy it to
-`~/.hermes/skills/productivity/recipe-runner/` along with the `docs/` reference files and
-update the paths to match your setup. This wires the ingest pipeline into agent-driven
-workflows: paste-to-recipe, vision photo ingest, and automated deploy via natural language.
+Install the bundled skill from `docs/SKILL.md` and `docs/*.md` — full steps in **`docs/REPLICATION.md`**. Copy to
+`~/.hermes/skills/productivity/recipe-runner/` along with `references/vision-extract-prompt.md` from the repo root.
 
 ## Documentation
 
 | File | Contents |
 |------|----------|
+| `docs/REPLICATION.md` | **Start here** — replicate engine + optional Hermes |
 | `docs/recipe-format-contract.md` | Full YAML frontmatter spec and body shape |
 | `docs/ingest-checklist.md` | Pre-commit ingest checklist |
 | `docs/ingest-text-image.md` | Text paste and vision photo ingest guide |
 | `docs/recipe-card-handwriting.md` | Handwritten index-card vision ingest flow |
+| `docs/ingredient-highlights.md` | Step `[[highlights]]` behavior and re-run |
+| `docs/ssg-recipe-links.md` | Cross-recipe `[[Title]]` links at build |
+| `docs/paste-ingest-fallback.md` | When `ingest_text` fails on good paste |
+| `docs/cookbook-photo-ingest-pitfalls.md` | Vision → JSON YAML/yield pitfalls |
+| `docs/batch-url-ingest-pitfalls.md` | Multi-URL ingest patterns |
+| `docs/portability-audit.md` | Grep checklist before a public fork |
+| `docs/upstream-sync.md` | Private repo ↔ public engine porting |
 | `docs/ingestion-fallback-chain.md` | URL ingest tier chain and outcome codes |
 | `docs/anti-scraping-tiers.md` | Site-specific scraping tiers and workarounds |
 | `docs/recipemd-format.md` | RecipeMD upstream format reference |
