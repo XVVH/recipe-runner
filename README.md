@@ -121,6 +121,7 @@ workflows: paste-to-recipe, vision photo ingest, and automated deploy via natura
 | `docs/recipe-format-contract.md` | Full YAML frontmatter spec and body shape |
 | `docs/ingest-checklist.md` | Pre-commit ingest checklist |
 | `docs/ingest-text-image.md` | Text paste and vision photo ingest guide |
+| `docs/recipe-card-handwriting.md` | Handwritten index-card vision ingest flow |
 | `docs/ingestion-fallback-chain.md` | URL ingest tier chain and outcome codes |
 | `docs/anti-scraping-tiers.md` | Site-specific scraping tiers and workarounds |
 | `docs/recipemd-format.md` | RecipeMD upstream format reference |

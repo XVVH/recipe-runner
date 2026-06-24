@@ -432,6 +432,18 @@ a.recipe-ref:hover { color: var(--ink); }
 .comments-body p:last-child {
   margin-bottom: 0;
 }
+/* Markdown notes links lack recipe-ref until build tags them; match site link style */
+.comments-body a,
+.comments-body a:visited {
+  color: var(--orange-ink);
+  font-weight: 700;
+  font-style: normal;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.comments-body a:hover {
+  color: var(--ink);
+}
 
 /* ── Tag index (home) ── */
 .tag-index {

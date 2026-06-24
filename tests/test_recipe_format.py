@@ -43,7 +43,7 @@ title: Bad Recipe
 date: 2026-06-01
 tags: [test]
 yield: 1 serving
-added_by: Josh
+added_by: You
 ---
 - *1 cup* flour
 
@@ -57,7 +57,7 @@ title: Broken
 date: 2026-06-01
 tags: [test]
 yield: 1
-added_by: Josh
+added_by: You
 ---
 Only prose here, no ingredient lines.
 
@@ -87,9 +87,9 @@ Simmer 10 minutes.
 
 Do ahead: Keeps 3 days.
 """
-    out = canonicalize(recipemd, source_url="https://example.com/soup", added_by="Josh")
+    out = canonicalize(recipemd, source_url="https://example.com/soup", added_by="You")
     assert _errors(out, strict=True) == []
-    assert "added_by: Josh" in out
+    assert "added_by: You" in out
     assert "source: https://example.com/soup" in out
     assert out.count("\n---\n") >= 2  # frontmatter + body sections
     assert "# Test Soup" not in out.split("---", 1)[-1]
@@ -116,9 +116,9 @@ def test_structured_to_recipemd_and_strict_validate():
         "notes": ["Keeps 3 days."],
     }
     md = structured_to_recipemd(data)
-    out = canonicalize(md, source_url="https://example.com/soup", added_by="Josh")
+    out = canonicalize(md, source_url="https://example.com/soup", added_by="You")
     assert _errors(out, strict=True) == []
-    assert "added_by: Josh" in out
+    assert "added_by: You" in out
     assert "broth" in out
 
 
@@ -128,6 +128,6 @@ def test_process_recipemd_invalid():
 
     r = process_recipemd(
         "# No ingredients\n\n---\n\nJust prose.\n\n---\n\nA step.",
-        added_by="Josh",
+        added_by="You",
     )
     assert r["status"] == "invalid_format"

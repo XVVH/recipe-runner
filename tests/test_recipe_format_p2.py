@@ -35,7 +35,7 @@ title: Test Soup
 date: 2026-06-01
 tags: [Soup]
 yield: 4 servings
-added_by: Josh
+added_by: You
 ---
 - *2 cups* chicken broth
 - *1* onion
@@ -48,13 +48,67 @@ Add onion to the broth and simmer.
     assert "[[chicken broth]]" in out.lower() or "broth" in out
 
 
+def test_highlights_head_noun_from_countable_unit():
+    """Steps say 'the garlic' when the list has 'garlic cloves, minced'."""
+    md = """---
+title: Beans
+date: 2026-06-01
+tags: [Side]
+yield: 4
+added_by: You
+---
+- *4* garlic cloves, minced
+- *1/4 cup* brown sugar
+
+---
+Add the garlic, brown sugar, and simmer.
+"""
+    out = apply_ingredient_highlights(md)
+    assert "[[garlic]]" in out
+    assert "[[brown sugar]]" in out
+
+
+def test_highlights_strip_modifiers_and_prep_clauses():
+    """Cookbook-style lines: ground ginger, unsalted butter (melted in step), flour."""
+    md = """---
+title: Spice Cookies
+date: 2026-06-01
+tags: [Dessert]
+yield: 42 cookies
+added_by: You
+---
+- *3 3/4 cups* all-purpose flour
+- *2 1/2 teaspoons* ground ginger
+- *1/2 teaspoon* ground allspice
+- *1/4 teaspoon* ground cloves
+- *1 1/2 sticks* unsalted butter, melted and cooled to room temperature
+- *2* large eggs, at room temperature
+- *1/2 cup* unsulfured molasses
+- *2 teaspoons* vanilla extract
+- *1/2 cup* demerara sugar, for rolling
+
+---
+Whisk together the flour, ginger, allspice, and cloves. Beat the melted butter. Add eggs and molasses, vanilla. Roll in demerara sugar.
+"""
+    out = apply_ingredient_highlights(md)
+    assert "[[flour]]" in out
+    assert "[[ginger]]" in out
+    assert "[[allspice]]" in out
+    assert "[[cloves]]" in out
+    assert "[[butter]]" in out
+    assert "[[eggs]]" in out
+    assert "[[molasses]]" in out
+    assert "[[vanilla]]" in out
+    assert "[[demerara sugar]]" in out or "demerara [[sugar]]" in out
+
+
 def test_highlights_skip_existing_spans():
     md = """---
 title: T
 date: 2026-06-01
 tags: [x]
 yield: 1
-added_by: Josh
+added_by: You
 ---
 - butter
 
@@ -63,6 +117,25 @@ Melt [[butter]] slowly.
 """
     out = apply_ingredient_highlights(md)
     assert out.count("[[butter]]") == 1
+
+
+def test_highlights_rerun_is_idempotent():
+    md = """---
+title: T
+date: 2026-06-01
+tags: [x]
+yield: 1
+added_by: You
+---
+- ground ginger
+
+---
+Whisk the ginger into the bowl.
+"""
+    once = apply_ingredient_highlights(md)
+    twice = apply_ingredient_highlights(once)
+    assert once == twice
+    assert "[[ginger]]" in twice
 
 
 def test_find_missing_ingredient_in_step():
@@ -78,7 +151,7 @@ title: Pasta
 date: 2026-06-01
 tags: [pasta]
 yield: 4 servings
-added_by: Josh
+added_by: You
 ---
 - tomatoes
 
@@ -161,13 +234,13 @@ def test_load_recipe_json_file_accepts_fenced_file(tmp_path):
 
 
 def test_parse_title_author_first_line():
-    raw = """Tomato Basil Pasta, by Avis
+    raw = """Tomato Basil Pasta, by Morgan
 6 medium tomatoes
 1 bunch basil
 """
     rest, title, author = parse_title_author_from_plaintext(raw)
     assert title == "Tomato Basil Pasta"
-    assert author == "Avis"
+    assert author == "Morgan"
     assert "6 medium tomatoes" in rest
 
 
@@ -194,15 +267,15 @@ Add tomatoes and basil. Serve with angel hair pasta.
 """
     r = process_recipemd(
         text,
-        source_label="Family recipe",
-        added_by="Josh",
+        source_label="Example cookbook",
+        added_by="You",
         slug_override="tomato-basil-pasta-ingest-test",
-        author="Avis",
+        author="Morgan",
         highlight=True,
         add_missing_ingredients=True,
     )
     assert r["status"] == "success", r.get("error")
-    assert "author: Avis" in r["md"]
+    assert "author: Morgan" in r["md"]
     assert "[[tomatoes]]" in r["md"] or "[[basil]]" in r["md"]
     assert "angel hair pasta" in r["md"]
     Path(r["output_path"]).unlink(missing_ok=True)

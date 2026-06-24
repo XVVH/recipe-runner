@@ -3,7 +3,7 @@ title: Peanut Butter Noodles (Ban Mian)
 date: 2026-06-01
 author: Qi Ai
 source: https://www.seriouseats.com/peanut-butter-noodles-ban-mian-recipe-11901834
-added_by: null
+added_by: You
 favorite: no
 yield: 2 servings
 tags:

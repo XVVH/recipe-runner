@@ -21,9 +21,11 @@ From saved HTML (bookmarklet / page save):
 
 Agent workflow: user pastes RecipeMD or recipe text → agent saves to `/tmp/recipe-ingest.md` → run `ingest_text.py` (do not hand-write `recipes/*.md` without running the script).
 
-**First line `Title, by Author`** (e.g. `Tomato Basil Pasta, by Avis`) is split into title + author before canonicalize (`parse_title_author_from_plaintext` in `ingest_common.py`).
+**First line `Title, by Author`** (e.g. `Tomato Basil Pasta, by Morgan`) is split into title + author before canonicalize (`parse_title_author_from_plaintext` in `ingest_common.py`).
 
 ## From cookbook photo / image
+
+Handwritten **recipe cards** (ruled index cards, multiple photos, sticky notes, pencil cross-outs): see `docs/recipe-card-handwriting.md`. Prefer vision → canonical direct write + `build.py`; do not rely on `ingest_text.py` alone for tag/yield preamble lines.
 
 Vision extraction is agent-driven; the script merges pages and writes the file.
 

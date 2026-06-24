@@ -476,6 +476,8 @@ _COUNTABLE_UNIT_WORDS = frozenset(
         "ears",
         "rib",
         "ribs",
+        "thigh",
+        "thighs",
         "bunch",
         "bunches",
         "stick",

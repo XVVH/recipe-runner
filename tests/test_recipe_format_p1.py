@@ -32,7 +32,7 @@ def test_canonicalize_omits_null_author_and_uses_favorite_no():
 
 Toast the bread.
 """
-    out = canonicalize(recipemd, source_url="https://example.com/t", added_by="Josh")
+    out = canonicalize(recipemd, source_url="https://example.com/t", added_by="You")
     assert "author: null" not in out
     assert "recommended_by: null" not in out
     assert "favorite: no\n" in out or out.endswith("favorite: no\n---")
@@ -63,7 +63,7 @@ Mix and serve.
     out = canonicalize(
         recipemd,
         source_url="https://seriouseats.com/test",
-        added_by="Josh",
+        added_by="You",
         schema_metadata=schema,
     )
     assert "author: Qi Ai" in out
@@ -114,7 +114,7 @@ Simmer.
     out = canonicalize(
         recipemd,
         source_url="https://example.com/s",
-        added_by="Josh",
+        added_by="You",
         keep_description=True,
     )
     fm_block = out.split("\n---\n", 1)[0]
@@ -136,9 +136,9 @@ Simmer.
 """
     out = canonicalize(
         recipemd,
-        added_by="Josh",
-        author="Avis",
+        added_by="You",
+        author="Morgan",
         schema_metadata={"author": "Someone Else"},
     )
-    assert "author: Avis" in out
+    assert "author: Morgan" in out
     assert "Someone Else" not in out

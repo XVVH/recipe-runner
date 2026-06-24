@@ -74,7 +74,7 @@
             {% for item in group.ingredients %}
             <li>
               <span class="qty">{{ item.qty }}</span>
-              <span class="name">{{ item.name }}</span>
+              <span class="name">{{ item.name | safe }}</span>
             </li>
             {% endfor %}
           </ul>

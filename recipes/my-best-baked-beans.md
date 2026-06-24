@@ -3,7 +3,7 @@ title: My Best Baked Beans
 date: 2026-05-28
 favorite: yes
 yield: 6 servings
-added_by: null
+added_by: You
 description: Everyone needs a "best" baked bean recipe in their repertoire. You know,
   the beans that disappear before anything else at the barbecue because everyone wants
   seconds. The "Who made the beans?" beans, the "I must have your recipe for the beans!"
