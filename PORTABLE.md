@@ -1,6 +1,6 @@
 # Portable Notes for Recipe Runner
 
-**Canonical onboarding:** [`docs/REPLICATION.md`](docs/REPLICATION.md) — what to hand someone so they get the same behavior (scripts, SSG, tests, optional Hermes skill) without your private recipes or URLs.
+**Canonical onboarding:** [`docs/REPLICATION.md`](docs/REPLICATION.md). **Hermes users:** [`docs/HERMES-AGENT.md`](docs/HERMES-AGENT.md) + `bash scripts/install-hermes-skill.sh`.
 
 ## Forking this project
 

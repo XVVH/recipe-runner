@@ -1,13 +1,18 @@
 # Recipe Runner
 
-A markdown-native recipe database with a Python static site generator and ingest
-pipeline. Store recipes as plain text files, build a fast static site, and import
-from URLs, pasted text, or vision-extracted JSON. No database, no framework, no
-Hermes Agent required to run it.
+Markdown-native recipe database + Python static site + ingest pipeline. Built for **Hermes Agent** users: clone this repo and let your agent follow **`docs/HERMES-AGENT.md`** (or root **`AGENTS.md`**) to install the skill and venv.
 
-**Give someone a full stack:** start with [`docs/REPLICATION.md`](docs/REPLICATION.md) (clone, venv, optional Hermes skill, behavior parity table).
+Works without Hermes too — scripts and `site/build.py` are standalone.
 
-## Quick Start
+## Hermes Agent (recommended)
+
+1. Clone: `git clone https://github.com/XVVH/recipe-runner.git ~/dev/recipe-runner`
+2. Tell your agent: *"Set up recipe-runner using the repo install playbook"* — it should run `bash scripts/install-hermes-skill.sh` and verify tests.
+3. Then: *"Add this recipe …"* — agent loads skill **`recipe-runner`**.
+
+Playbook: [`docs/HERMES-AGENT.md`](docs/HERMES-AGENT.md)
+
+## Quick Start (no agent)
 
 ```
 git clone https://github.com/XVVH/recipe-runner && cd recipe-runner
@@ -111,14 +116,14 @@ welcome.
 
 ## Hermes Agent Integration
 
-Install the bundled skill from `docs/SKILL.md` and `docs/*.md` — full steps in **`docs/REPLICATION.md`**. Copy to
-`~/.hermes/skills/productivity/recipe-runner/` along with `references/vision-extract-prompt.md` from the repo root.
+Install the bundled skill via **`bash scripts/install-hermes-skill.sh`** — see **`docs/HERMES-AGENT.md`** for the full agent playbook.
 
 ## Documentation
 
 | File | Contents |
 |------|----------|
 | `docs/REPLICATION.md` | **Start here** — replicate engine + optional Hermes |
+| `docs/HERMES-AGENT.md` | **Hermes agents** — clone, venv, skill install |
 | `docs/recipe-format-contract.md` | Full YAML frontmatter spec and body shape |
 | `docs/ingest-checklist.md` | Pre-commit ingest checklist |
 | `docs/ingest-text-image.md` | Text paste and vision photo ingest guide |

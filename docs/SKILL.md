@@ -1,10 +1,12 @@
 ---
 name: recipe-runner
-description: Manage a Recipe Runner collection. Canonical YAML-frontmatter + ingredients-first body, recipe_format.py validation, ingest pipeline (URL/text/image/PDF), Python SSG, static deploy. Generic — copy from the recipe-runner repo docs/.
-version: 1.1.0
+description: Use when setting up or operating Recipe Runner with Hermes — clone repo, install this skill, venv, ingest (URL/text/image/PDF), build static site. Read references/HERMES-AGENT.md on first setup.
+version: 1.2.0
 triggers:
   - recipe collection
   - recipe runner
+  - install recipe runner
+  - set up recipe runner
   - recipe site
   - recipe import
   - ingest recipe
@@ -16,6 +18,8 @@ triggers:
   - handwritten recipe card
 linked_files:
   references:
+    - HERMES-AGENT.md
+    - local-config.md
     - REPLICATION.md
     - recipe-format-contract.md
     - ingest-checklist.md
@@ -36,14 +40,22 @@ linked_files:
 
 # Recipe Runner
 
-## Setup
+## Agent: first-time setup
 
-> **Install:** see `references/REPLICATION.md` in this skill folder. Summary: clone the repo, venv, copy this `SKILL.md` + all `references/*.md` + repo `references/vision-extract-prompt.md`.
+If `references/local-config.md` is missing or `repo_path` does not exist on disk, run **`references/HERMES-AGENT.md`** (full playbook). Minimal path from repo root:
 
-Repo: `~/dev/recipe-runner` (your clone path)
-Python SSG: `.venv/bin/python3 site/build.py` → `_site/`
-Production URL: `RECIPE_RUNNER_SITE_URL` env var
-Default ingest attribution: `RECIPE_RUNNER_ADDED_BY` or `--added-by "You"`
+```bash
+bash scripts/install-hermes-skill.sh
+```
+
+Then read **`references/local-config.md`** for `repo_path`, `venv_python`, and `build`. Use that repo’s `.venv` for all ingest/build commands.
+
+## Setup (steady state)
+
+Repo: path from `references/local-config.md` (default clone: `~/dev/recipe-runner`)
+Python SSG: `venv_python site/build.py` → `_site/`
+Production URL: `site_url` in `local-config.md` or `RECIPE_RUNNER_SITE_URL`
+Default ingest attribution: `added_by` in `local-config.md` or `--added-by`
 
 ## Format contract
 
@@ -161,6 +173,4 @@ recipe-runner/
 
 ## Adapting this skill
 
-1. Follow `references/REPLICATION.md` (clone repo, env vars, optional Hermes install).
-2. Update repo path and `RECIPE_RUNNER_SITE_URL` in this file if needed.
-3. Keep `references/` in sync with the repo's `docs/*.md` when the engine updates.
+Re-run `bash scripts/install-hermes-skill.sh` from the repo after `git pull` to refresh references. Edit `references/local-config.md` for site URL or `added_by` if needed.

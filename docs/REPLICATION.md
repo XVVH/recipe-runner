@@ -43,22 +43,17 @@ Always ingest — do not hand-author new `recipes/*.md` without running a script
 
 See `docs/ingest-text-image.md`, `docs/pdf-ingest.md`, `docs/recipe-card-handwriting.md`.
 
-## 3. Optional: Hermes Agent
+## 3. Hermes Agent
 
-Hermes is **not** required. If you use [Hermes Agent](https://hermes-agent.nousresearch.com/docs), install the bundled skill:
+Primary path for Hermes users: **`docs/HERMES-AGENT.md`** (agent playbook). One command after clone:
 
 ```bash
-mkdir -p ~/.hermes/skills/productivity/recipe-runner/references
-cp docs/SKILL.md ~/.hermes/skills/productivity/recipe-runner/
-cp docs/*.md ~/.hermes/skills/productivity/recipe-runner/references/
-cp references/vision-extract-prompt.md ~/.hermes/skills/productivity/recipe-runner/references/
+bash scripts/install-hermes-skill.sh
 ```
 
-Edit `SKILL.md` **Setup** section: set your repo path, `RECIPE_RUNNER_SITE_URL`, and deploy command (Netlify, S3, etc.).
+That copies this skill to `~/.hermes/skills/productivity/recipe-runner/`, all `docs/*.md` into `references/`, vision prompt, and writes `references/local-config.md` with your `repo_path`.
 
-Triggers include "add a recipe", "import from photo", "paste this recipe" — see skill frontmatter.
-
-Vision ingest: `vision_analyze` per photo using prompts in `references/vision-extract-prompt.md`, save JSON, then `ingest_image.py` (documented in skill + `ingest-text-image.md`).
+Human-readable overview: §1–2 above. Triggers: `install recipe runner`, `add a recipe`, `import from photo`, etc.
 
 ## 4. Deploy
 
@@ -107,7 +102,8 @@ See `docs/portability-audit.md` for a fuller checklist.
 | `docs/paste-ingest-fallback.md` | `ingest_text` fails on good paste |
 | `docs/cookbook-photo-ingest-pitfalls.md` | Vision → JSON crashes |
 | `docs/batch-url-ingest-pitfalls.md` | Many URLs in one session |
-| `docs/SKILL.md` | Hermes skill source |
+| `docs/HERMES-AGENT.md` | **Hermes agents** — install playbook |
+| `docs/SKILL.md` | Hermes skill source (installed by script) |
 | `docs/portability-audit.md` | Sanitizing a public fork |
 
 ## Maintainer note (private + public repos)
